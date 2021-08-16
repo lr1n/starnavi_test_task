@@ -1,7 +1,11 @@
 from django.contrib.auth.models import User
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, viewsets, renderers
 from rest_framework.response import Response
-from social_network_app.serializers import SignUpSerializer, UserSerializer
+from social_network_app.serializers import (
+    SignUpSerializer, UserSerializer, PostSerializer
+)
+from social_network_app.permissions import IsAuthorOrReadOnly
+from social_network_app.models import Post, Like
 
 
 class SignUpUser(generics.GenericAPIView):
@@ -17,7 +21,22 @@ class SignUpUser(generics.GenericAPIView):
         })
 
 
-class UserList(generics.ListAPIView):
+# class UserList(generics.ListAPIView):
+#     queryset = User.objects.all()
+#     serializer_class = UserSerializer
+#     permission_classes = [permissions.IsAuthenticated]
+
+
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+class PostViewSet(viewsets.ModelViewSet):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [permissions.IsAuthenticated, IsAuthorOrReadOnly]
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
