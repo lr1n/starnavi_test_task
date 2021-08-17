@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from rest_framework import generics, permissions, viewsets
 from rest_framework.response import Response
 from social_network_app.serializers import (
-    SignUpSerializer, UserSerializer, PostSerializer
+    SignUpSerializer, UserSerializer, PostSerializer,
 )
 from social_network_app.permissions import IsAuthorOrReadOnly
 from social_network_app.models import Post, Like
@@ -25,7 +25,6 @@ class SignUpView(generics.GenericAPIView):
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    # permission_classes = [permissions.IsAuthenticated]
 
 
 class PostViewSet(viewsets.ModelViewSet):

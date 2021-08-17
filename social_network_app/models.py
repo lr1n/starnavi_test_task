@@ -15,6 +15,12 @@ class Post(models.Model):
 
 
 class Like(models.Model):
-    post = models.ManyToManyField(Post, related_name='post_likes', blank=True)
-    owner = models.ManyToManyField(User, related_name='user_likes', blank=True)
+    post = models.ForeignKey(
+        Post, on_delete=models.CASCADE,
+        related_name='post_likes', blank=True, null=True
+    )
+    owner = models.ForeignKey(
+        User, on_delete=models.CASCADE,
+        related_name='user_likes', blank=True, null=True
+    )
     created_at = models.DateTimeField(auto_now_add=True)

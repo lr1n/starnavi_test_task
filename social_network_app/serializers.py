@@ -21,7 +21,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['url', 'id', 'username', 'password', 'posts', 'last_login']
+        fields = ['url', 'id', 'username', 'posts', 'last_login']
         extra_kwargs = {'last_login': {'read_only': True}}
 
 
@@ -30,7 +30,11 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['url', 'id', 'author', 'title', 'content', 'created_at']
+        fields = [
+            'url', 'id', 'author', 'title',
+            'content', 'created_at', 'post_likes',
+        ]
         extra_kwargs = {
-            'author': {'read_only': True}, 'created_at': {'read_only': True}
+            'author': {'read_only': True}, 'created_at': {'read_only': True},
+            'post_likes': {'required': False}
         }

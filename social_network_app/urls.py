@@ -7,6 +7,6 @@ router.register(r'posts', views.PostViewSet)
 router.register(r'users', views.UserViewSet)
 
 urlpatterns = [
-    path('api/sign_up/', views.SignUpView.as_view()),
-    path('api/', include(router.urls)),
+    path('sign_up/', views.SignUpView.as_view()),
+    path('', include(router.urls)),
 ]
