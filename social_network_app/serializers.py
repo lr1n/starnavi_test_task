@@ -32,9 +32,21 @@ class PostSerializer(serializers.ModelSerializer):
         model = Post
         fields = [
             'url', 'id', 'author', 'title',
-            'content', 'created_at', 'post_likes',
+            'content', 'created_at', 'likes',
         ]
         extra_kwargs = {
             'author': {'read_only': True}, 'created_at': {'read_only': True},
-            'post_likes': {'required': False}
+            'likes': {'required': False}
+        }
+
+
+class LikeSerializer(serializers.ModelSerializer):
+    # owner = serializers.ReadOnlyField(source='owner.username')
+
+    class Meta:
+        model = Like
+        fields = ['id', 'post', 'owner', 'created_at']
+        extra_kwargs = {
+            # 'owner': {'required': False},
+            'created_at': {'read_only': True}
         }

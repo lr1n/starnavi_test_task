@@ -1,10 +1,13 @@
 from django.contrib.auth.models import User
-from rest_framework import generics, permissions, viewsets
+from rest_framework import generics, permissions, viewsets, status
 from rest_framework.response import Response
+from rest_framework.decorators import api_view
 from social_network_app.serializers import (
-    SignUpSerializer, UserSerializer, PostSerializer,
+    SignUpSerializer, UserSerializer, PostSerializer, LikeSerializer
 )
-from social_network_app.permissions import IsAuthorOrReadOnly
+from social_network_app.permissions import (
+    IsAuthorOrReadOnly, IsOwnerOrReadOnly
+)
 from social_network_app.models import Post, Like
 
 
@@ -30,7 +33,12 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = [permissions.IsAuthenticated, IsAuthorOrReadOnly]
+    permission_classes = [IsAuthorOrReadOnly]
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+
+class LikeViewSet(viewsets.ModelViewSet):
+    queryset = Like.objects.all()
+    serializer_class = LikeSerializer
