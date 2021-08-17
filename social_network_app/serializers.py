@@ -3,17 +3,6 @@ from rest_framework import serializers
 from social_network_app.models import Post, Like
 
 
-class UserSerializer(serializers.ModelSerializer):
-    posts = serializers.HyperlinkedRelatedField(
-        many=True, view_name='post_detail', read_only=True
-    )
-
-    class Meta:
-        model = User
-        fields = ['url', 'id', 'username', 'password', 'posts', 'last_login']
-        extra_kwargs = {'last_login': {'read_only': True}}
-
-
 class SignUpSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -28,7 +17,15 @@ class SignUpSerializer(serializers.ModelSerializer):
         return user
 
 
-class PostSerializer(serializers.HyperlinkedModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ['url', 'id', 'username', 'password', 'posts', 'last_login']
+        extra_kwargs = {'last_login': {'read_only': True}}
+
+
+class PostSerializer(serializers.ModelSerializer):
     author = serializers.ReadOnlyField(source='author.username')
 
     class Meta:
