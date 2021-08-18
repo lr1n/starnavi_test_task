@@ -1,13 +1,12 @@
 from django.contrib.auth.models import User
-from rest_framework import generics, permissions, viewsets, status
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import authenticate, login
+from rest_framework import generics, permissions, viewsets, views, status
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
 from social_network_app.serializers import (
     SignUpSerializer, UserSerializer, PostSerializer, LikeSerializer
 )
-from social_network_app.permissions import (
-    IsAuthorOrReadOnly, IsOwnerOrReadOnly
-)
+from social_network_app.permissions import IsAuthorOrReadOnly
 from social_network_app.models import Post, Like
 
 
@@ -20,9 +19,37 @@ class SignUpView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         return Response({
-            'user': UserSerializer(user, context=self.get_serializer_context()).data,
+            'user': UserSerializer(
+                user, context=self.get_serializer_context()
+            ).data,
             'message': 'User have created successfully',
         })
+
+
+class LoginView(generics.GenericAPIView):
+    serializer_class = UserSerializer
+
+    @csrf_exempt
+    def post(self, request, format=None):
+        data = request.data
+        username = data.get('username', None)
+        password = data.get('password', None)
+        user = authenticate(username=username, password=password)
+
+        if user is not None:
+            if user.is_active:
+                login(request, user)
+                return Response({
+                    'user': UserSerializer(
+                        user, context=self.get_serializer_context()
+                    ).data,
+                    'message': 'User have logged in successfully',
+                })
+
+            else:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -42,3 +69,6 @@ class PostViewSet(viewsets.ModelViewSet):
 class LikeViewSet(viewsets.ModelViewSet):
     queryset = Like.objects.all()
     serializer_class = LikeSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)

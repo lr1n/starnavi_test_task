@@ -41,12 +41,12 @@ class PostSerializer(serializers.ModelSerializer):
 
 
 class LikeSerializer(serializers.ModelSerializer):
-    # owner = serializers.ReadOnlyField(source='owner.username')
+    owner = serializers.ReadOnlyField(source='owner.username')
 
     class Meta:
         model = Like
         fields = ['id', 'post', 'owner', 'created_at']
         extra_kwargs = {
-            # 'owner': {'required': False},
+            'owner': {'required': False},
             'created_at': {'read_only': True}
         }
