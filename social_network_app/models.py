@@ -30,3 +30,6 @@ class Like(models.Model):
 
     def __str__(self):
         return self.pk
+
+    class Meta:
+        ordering = ['created_at']
