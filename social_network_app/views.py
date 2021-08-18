@@ -81,10 +81,22 @@ class LikeViewSet(viewsets.ModelViewSet):
 def analytics(request, date_from, date_to, format=None):
     date_from_iso = datetime.fromisoformat(date_from)
     date_to_iso = datetime.fromisoformat(date_to)
-    if request.method == 'GET':
-        total_likes = Like.objects.filter(
-            created_at__date__range=[date_from_iso, date_to_iso]
-        )
-        total_likes_serializer = LikeSerializer(total_likes, many=True)
-        response = like_analytics(total_likes_serializer)
-        return Response(response)
+    total_likes = Like.objects.filter(
+        created_at__date__range=[date_from_iso, date_to_iso]
+    )
+    total_likes_serializer = LikeSerializer(total_likes, many=True)
+    response = like_analytics(total_likes_serializer)
+    return Response(response)
+
+
+@api_view(['GET'])
+def user_activity(request, format=None):
+    user = request.user
+    serializer = UserSerializer(user)
+    username = serializer.data['username']
+    last_login = serializer.data['last_login']
+    last_activity = None
+    response = {
+        username: {'last_login': last_login, 'last_activity': last_activity}
+    }
+    return Response(response)
