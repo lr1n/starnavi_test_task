@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from social_network_app.models import Post, Like
+from social_network_app.models import Post, Like, Profile
 
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -50,3 +50,12 @@ class LikeSerializer(serializers.ModelSerializer):
             'owner': {'required': False},
             'created_at': {'read_only': True}
         }
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source='user.username')
+
+    class Meta:
+        model = Profile
+        fields = ['user', 'last_activity']
+        extra_kwargs = {'last_activity': {'read_only': True}}

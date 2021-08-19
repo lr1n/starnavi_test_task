@@ -6,6 +6,6 @@ urlpatterns = [
     path('sign_up/', views.SignUpView.as_view()),
     path('login/', views.LoginView.as_view()),
     path('analytics/<str:date_from>&<str:date_to>/', views.analytics),
-    path('user_activity/', views.user_activity),
+    path('last_activity/', views.last_activity),
     path('', include(router.urls))
 ]

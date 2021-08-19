@@ -6,7 +6,8 @@ from rest_framework import generics, permissions, viewsets, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from social_network_app.serializers import (
-    SignUpSerializer, UserSerializer, PostSerializer, LikeSerializer
+    SignUpSerializer, UserSerializer, PostSerializer,
+    LikeSerializer, ProfileSerializer
 )
 from social_network_app.permissions import IsAuthorOrReadOnly
 from social_network_app.models import Post, Like
@@ -31,6 +32,7 @@ class SignUpView(generics.GenericAPIView):
 
 class LoginView(generics.GenericAPIView):
     serializer_class = UserSerializer
+    permission_classes = [permissions.AllowAny]
 
     @csrf_exempt
     def post(self, request, format=None):
@@ -90,12 +92,14 @@ def analytics(request, date_from, date_to, format=None):
 
 
 @api_view(['GET'])
-def user_activity(request, format=None):
+def last_activity(request, format=None):
     user = request.user
+    profile = request.user.profile
     serializer = UserSerializer(user)
+    profile_serializer = ProfileSerializer(profile)
     username = serializer.data['username']
     last_login = serializer.data['last_login']
-    last_activity = None
+    last_activity = profile_serializer.data['last_activity']
     response = {
         username: {'last_login': last_login, 'last_activity': last_activity}
     }
