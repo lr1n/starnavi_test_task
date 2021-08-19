@@ -65,7 +65,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = [IsAuthorOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated, IsAuthorOrReadOnly]
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -95,12 +95,44 @@ def analytics(request, date_from, date_to, format=None):
 def last_activity(request, format=None):
     user = request.user
     profile = request.user.profile
-    serializer = UserSerializer(user)
+    user_serializer = UserSerializer(user)
     profile_serializer = ProfileSerializer(profile)
-    username = serializer.data['username']
-    last_login = serializer.data['last_login']
+    username = user_serializer.data['username']
+    last_login = user_serializer.data['last_login']
     last_activity = profile_serializer.data['last_activity']
     response = {
         username: {'last_login': last_login, 'last_activity': last_activity}
     }
     return Response(response)
+
+
+# @api_view(['POST'])
+# def like_post(request, pk):
+#     user = request.user
+#     post = Post.objects.get(pk=pk)
+#     like, created = Like.objects.get_or_create(owner=user, post=post)
+#     if not created:
+#         Like.objects.filter(owner=user, post=post).delete()
+#         return Response({'qwe': 'You can\'t like.'})
+#     else:
+#         return Response({'qwe': 'Like was added successfully.'})
+
+@api_view(['POST', 'DELETE'])
+def like_post(request, pk):
+    user = request.user
+
+    try:
+        post = Post.objects.get(pk=pk)
+    except Post.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'POST':
+        like, created = Like.objects.get_or_create(owner=user, post=post)
+        if not created:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response(status=status.HTTP_201_CREATED)
+
+    if request.method == 'DELETE':
+        Like.objects.filter(owner=user, post=post).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

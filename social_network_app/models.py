@@ -30,8 +30,8 @@ class Like(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return self.pk
+    # def __str__(self):
+    #     return self.pk
 
     class Meta:
         ordering = ['created_at']
