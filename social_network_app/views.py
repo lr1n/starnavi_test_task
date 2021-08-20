@@ -4,12 +4,13 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login
 from rest_framework import generics, permissions, viewsets, status
 from rest_framework.decorators import api_view
+from rest_framework.decorators import permission_classes as dec_perm_classes
 from rest_framework.response import Response
 from social_network_app.serializers import (
     SignUpSerializer, UserSerializer, PostSerializer,
     LikeSerializer, ProfileSerializer
 )
-from social_network_app.permissions import IsAuthorOrReadOnly
+from social_network_app.permissions import IsOwnerOrReadOnly
 from social_network_app.models import Post, Like
 from social_network_app.utils import like_analytics
 
@@ -30,31 +31,24 @@ class SignUpView(generics.GenericAPIView):
         })
 
 
-class LoginView(generics.GenericAPIView):
-    serializer_class = UserSerializer
-    permission_classes = [permissions.AllowAny]
+@csrf_exempt
+@api_view(['POST'])
+@dec_perm_classes([permissions.AllowAny])
+def login_view(request, format=None):
+    data = request.data
+    username = data.get('username', None)
+    password = data.get('password', None)
+    user = authenticate(username=username, password=password)
 
-    @csrf_exempt
-    def post(self, request, format=None):
-        data = request.data
-        username = data.get('username', None)
-        password = data.get('password', None)
-        user = authenticate(username=username, password=password)
+    if user is not None:
+        if user.is_active:
+            login(request, user)
+            return Response(status=status.HTTP_200_OK)
 
-        if user is not None:
-            if user.is_active:
-                login(request, user)
-                return Response({
-                    'user': UserSerializer(
-                        user, context=self.get_serializer_context()
-                    ).data,
-                    'message': 'User have logged in successfully',
-                })
-
-            else:
-                return Response(status=status.HTTP_404_NOT_FOUND)
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
+    else:
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -65,15 +59,16 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = [permissions.IsAuthenticated, IsAuthorOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        serializer.save(owner=self.request.user)
 
 
 class LikeViewSet(viewsets.ModelViewSet):
     queryset = Like.objects.all()
     serializer_class = LikeSerializer
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -83,6 +78,7 @@ class LikeViewSet(viewsets.ModelViewSet):
 def analytics(request, date_from, date_to, format=None):
     date_from_iso = datetime.fromisoformat(date_from)
     date_to_iso = datetime.fromisoformat(date_to)
+    # We are getting all likes from 'date_from' to 'date_to'.
     total_likes = Like.objects.filter(
         created_at__date__range=[date_from_iso, date_to_iso]
     )
@@ -105,17 +101,6 @@ def last_activity(request, format=None):
     }
     return Response(response)
 
-
-# @api_view(['POST'])
-# def like_post(request, pk):
-#     user = request.user
-#     post = Post.objects.get(pk=pk)
-#     like, created = Like.objects.get_or_create(owner=user, post=post)
-#     if not created:
-#         Like.objects.filter(owner=user, post=post).delete()
-#         return Response({'qwe': 'You can\'t like.'})
-#     else:
-#         return Response({'qwe': 'Like was added successfully.'})
 
 @api_view(['POST', 'DELETE'])
 def like_post(request, pk):
