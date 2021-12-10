@@ -1,5 +1,3 @@
-# Test task for StarNavi.
-
 ## Users: username "admin", password - "admin"; username - "test_user", password - "test_user".
 
 | **Endpoints** | **Description** |
